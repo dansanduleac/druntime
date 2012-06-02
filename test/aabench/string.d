@@ -20,8 +20,8 @@ void runTest(string[] words)
 
 void main(string[] args)
 {
-    // test/bin/aabench/string => test/extra-files/dante.txt
-    auto path = dirName(dirName(dirName(absolutePath(args[0]))));
+    // test/aabench/string => test/extra-files/dante.txt
+    auto path = dirName(dirName(absolutePath(args[0])));
     path = buildPath(path, "extra-files", "dante.txt");
     auto words = split(std.file.readText(path));
     runTest(words);
