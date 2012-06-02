@@ -16,6 +16,7 @@ import std.ascii, std.datetime, std.exception, std.file, std.path,
 
 // cmdline flags
 bool verbose;
+string dc;
 
 void runCmd(string cmd)
 {
@@ -28,8 +29,8 @@ void runTest(string pattern, string dflags)
 {
     string[] sources;
     auto re = regex(pattern, "g");
-    auto self = buildPath(curdir, "runbench.d");
-    foreach(DirEntry src; dirEntries(curdir, SpanMode.depth))
+    auto self = absolutePath("runbench.d");
+    foreach(DirEntry src; dirEntries(getcwd(), SpanMode.depth))
     {
         if (src.isFile && !match(src.name, re).empty &&
             endsWith(src.name, ".d") && src.name != self)
@@ -42,7 +43,7 @@ void runTest(string pattern, string dflags)
     {
         writeln("COMPILING ", src);
         auto bin = buildPath(absolutePath("bin"), src.chompPrefix("./").chomp(".d"));
-        auto cmd = std.string.format("dmd %s -op -odobj -of%s %s", dflags, bin, src);
+        auto cmd = std.string.format("%s %s -op -odobj -of%s %s", dc, dflags, bin, src);
         runCmd(cmd);
         src = bin;
     }
@@ -69,7 +70,9 @@ void printHelp()
 
         "   tests  - List of regular expressions to select tests. Default: '.*\\.d'"~newline~
         "   dflags - Flags passed to compiler. Default: '-O -release -inline'"~newline~newline~
-        "Don't pass any argument to run all tests with optimized builds.";
+        "Don't pass any argument to run all tests with optimized builds."~newline~newline~
+        "Environment Variables:"~newline~
+        "  DC\t\tD compiler to use (default = dmd)";
 
     writeln(helpString);
 }
@@ -78,6 +81,8 @@ void main(string[] args)
 {
     string[] patterns;
     string[] flags;
+
+    dc = environment.get("DC", "dmd");
 
     foreach(arg; args[1 .. $])
     {
